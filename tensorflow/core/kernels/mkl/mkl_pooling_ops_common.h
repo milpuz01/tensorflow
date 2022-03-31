@@ -25,6 +25,7 @@ limitations under the License.
 #include "dnnl.hpp"
 #include "tensorflow/core/util/mkl_util.h"
 #include "tensorflow/core/util/padding.h"
+#include "tensorflow/core/platform/mutex.h"
 
 namespace tensorflow {
 
@@ -147,6 +148,8 @@ class MklPoolingFwdPrimitive : public MklPrimitive {
   };
 
   struct PoolingFwdContext context_;
+
+  mutex mu_;
 };
 
 template <typename T>
@@ -292,6 +295,7 @@ class MklPoolingBwdPrimitive : public MklPrimitive {
   };
 
   struct PoolingBwdContext context_;
+  mutex mu_;
 };
 
 template <typename T>

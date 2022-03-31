@@ -86,6 +86,7 @@ template <typename T>
 void MklPoolingFwdPrimitive<T>::Execute(const T* src_data, T* dst_data,
                                         void* ws_data,
                                         std::shared_ptr<stream> fwd_stream) {
+  mutex_lock lock(mu_);
 #ifndef ENABLE_ONEDNN_OPENMP
   context_.src_mem->set_data_handle(
       static_cast<void*>(const_cast<T*>(src_data)), *fwd_stream);
@@ -186,6 +187,7 @@ template <typename T>
 void MklPoolingBwdPrimitive<T>::Execute(const T* diff_dst_data,
                                         T* diff_src_data, const void* ws_data,
                                         std::shared_ptr<stream> bwd_stream) {
+  mutex_lock lock(mu_);
 #ifndef ENABLE_ONEDNN_OPENMP
   context_.diff_dst_mem->set_data_handle(
       static_cast<void*>(const_cast<T*>(diff_dst_data)), *bwd_stream);

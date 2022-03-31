@@ -24,6 +24,7 @@ limitations under the License.
 #include "tensorflow/core/kernels/no_op.h"
 #include "tensorflow/core/util/mkl_util.h"
 #include "tensorflow/core/util/tensor_format.h"
+#include "tensorflow/core/platform/mutex.h"
 
 #define GET_FLAG(bn_flag) static_cast<int>(dnnl::normalization_flags::bn_flag)
 #define IS_SET(cflag) (context_.flags & GET_FLAG(cflag))
@@ -82,6 +83,7 @@ class MklFusedBatchNormFwdPrimitive : public MklPrimitive {
   void Execute(const T* src_data, const U* weights_data, T* dst_data,
                U* mean_data, U* variance_data,
                std::shared_ptr<stream> fwd_stream, U* workspace_data) {
+    mutex_lock lock(mu_);
 #ifndef ENABLE_ONEDNN_OPENMP
     // TODO(intel-tf): Create a common function and avoid the duplicate code
     context_.src_mem->set_data_handle(
@@ -323,6 +325,8 @@ class MklFusedBatchNormFwdPrimitive : public MklPrimitive {
   }
 
   struct BatchNormFwdContext context_;
+
+  mutex mu_;
 };
 
 template <typename T, typename U>
@@ -428,6 +432,7 @@ class MklFusedBatchNormBwdPrimitive : public MklPrimitive {
                const T* diff_dst_data, const U* weights_data, T* diff_src_data,
                U* diff_weights_data, U* res_space_data,
                std::shared_ptr<stream> bwd_stream) {
+    mutex_lock lock(mu_);
 #ifndef ENABLE_ONEDNN_OPENMP
     // TODO(intel-tf): Create a common function and avoid the duplicate code
     context_.src_mem->set_data_handle(
@@ -584,6 +589,8 @@ class MklFusedBatchNormBwdPrimitive : public MklPrimitive {
   }
 
   struct BatchNormBwdContext context_;
+
+  mutex mu_;
 };
 
 template <typename T, typename U>

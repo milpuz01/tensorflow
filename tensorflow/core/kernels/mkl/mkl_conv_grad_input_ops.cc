@@ -30,6 +30,7 @@ limitations under the License.
 #include "tensorflow/core/kernels/mkl/mkl_conv_ops.h"
 #include "tensorflow/core/util/use_cudnn.h"
 #include "tensorflow/core/util/work_sharder.h"
+#include "tensorflow/core/platform/mutex.h"
 
 using dnnl::convolution_backward_data;
 using dnnl::prop_kind;
@@ -90,6 +91,7 @@ class MklConvBwdInputPrimitive : public MklPrimitive {
   void Execute(const T* diff_src_data, const T* filter_data,
                const T* diff_dst_data,
                std::shared_ptr<stream> bwd_input_stream) {
+    mutex_lock lock(mu_);
 #ifndef ENABLE_ONEDNN_OPENMP
     // TODO(intel-tf): Create a common function and avoid the duplicate code
     context_.diff_src_mem->set_data_handle(
@@ -219,6 +221,7 @@ class MklConvBwdInputPrimitive : public MklPrimitive {
   }
 
   struct ConvBwdInputContext context_;
+  mutex mu_;
 };
 
 template <typename T>
